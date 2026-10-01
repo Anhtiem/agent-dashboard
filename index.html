@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Agent - Quản lý Quy Trình Công Việc</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .workflow-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .workflow-step {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 180px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .workflow-step:hover {
+            transform: translateY(-5px);
+        }
+
+        .workflow-step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .workflow-step.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .step-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step-status {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            margin: 0 10px;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-left: 5px solid #667eea;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .agent-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .agent-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .agent-section {
+            margin-bottom: 15px;
+        }
+
+        .agent-section label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .agent-section input,
+        .agent-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .agent-section textarea {
+            min-height: 80px;
+        }
+
+        .agent-section input:focus,
+        .agent-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-save {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #45a049;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #da190b;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .summary-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .workflow-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 Dashboard Agent</h1>
+            <p>Quản lý quy trình công việc với các Agent độc lập</p>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-section">
+            <h2>📊 Tổng Quan</h2>
+            <div class="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalAgents">0</div>
+                    <div class="stat-label">Tổng Agent</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="completedCount">0</div>
+                    <div class="stat-label">Hoàn Thành</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="activeCount">0</div>
+                    <div class="stat-label">Đang Làm</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Chưa Làm</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow View -->
+        <div class="summary-section">
+            <h2>📋 Sơ Đồ Quy Trình</h2>
+            <div class="workflow-container" id="workflowContainer"></div>
+        </div>
+
+        <!-- Add New Agent Button -->
+        <button class="btn btn-add" onclick="addNewAgent()">+ Thêm Agent Mới</button>
+
+        <!-- Agents Grid -->
+        <div class="agents-grid" id="agentsContainer"></div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>💡 Tip: Mở Console (F12) để xem dữ liệu JSON hoặc sử dụng Claude Pro để tương tác</p>
+            <p>📝 Dữ liệu được lưu trữ trong Local Storage của trình duyệt</p>
+        </div>
+    </div>
+
+    <script>
+        // Load data from localStorage
+        function loadAgents() {
+            const data = localStorage.getItem('agents');
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Save data to localStorage
+        function saveAgents(agents) {
+            localStorage.setItem('agents', JSON.stringify(agents));
+            updateUI();
+        }
+
+        // Add new agent
+        function addNewAgent() {
+            const agents = loadAgents();
+            const newAgent = {
+                id: Date.now(),
+                order: agents.length + 1,
+                name: `Agent ${agents.length + 1}`,
+                description: '',
+                input: '',
+                output: '',
+                process: '',
+                status: 'pending',
+                icon: '🤖'
+            };
+            agents.push(newAgent);
+            saveAgents(agents);
+        }
+
+        // Update agent
+        function updateAgent(id, field, value) {
+            const agents = loadAgents();
+            const agent = agents.find(a => a.id === id);
+            if (agent) {
+                agent[field] = value;
+                saveAgents(agents);
+            }
+        }
+
+        // Delete agent
+        function deleteAgent(id) {
+            if (confirm('Bạn có chắc muốn xóa Agent này?')) {
+                let agents = loadAgents();
+                agents = agents.filter(a => a.id !== id);
+                // Reorder
+                agents.forEach((agent, index) => {
+                    agent.order = index + 1;
+                });
+                saveAgents(agents);
+            }
+        }
+
+        // Update UI
+        function updateUI() {
+            const agents = loadAgents();
+            renderAgents(agents);
+            updateWorkflow(agents);
+            updateStats(agents);
+        }
+
+        // Render agents
+        function renderAgents(agents) {
+            const container = document.getElementById('agentsContainer');
+            container.innerHTML = agents.map(agent => `
+                <div class="agent-card">
+                    <h3>
+                        <div class="agent-number">${agent.order}</div>
+                        <input 
+                            type="text" 
+                            value="${agent.name}" 
+                            style="border: none; background: transparent; font-size: 18px; flex: 1;"
+                            onchange="updateAgent(${agent.id}, 'name', this.value)"
+                        />
+                    </h3>
+
+                    <div class="agent-section">
+                        <label>📝 Mô Tả</label>
+                        <textarea 
+                            onchange="updateAgent(${agent.id}, 'description', this.value)"
+                        >${agent.description || ''}</textarea>
+                    </div>
+
+                    <div class="agent-section">
+                        <label>📥 Đầu Vào (Input)</label>
+                        <textarea 
+                            onchange="updateAgent(${agent.id}, 'input', this.value)"
+                        >${agent.input || ''}</textarea>
+                    </div>
+
+                    <div class="agent-section">
+                        <label>⚙️ Quy Trình (Process)</label>
+                        <textarea 
+                            onchange="updateAgent(${agent.id}, 'process', this.value)"
+                        >${agent.process || ''}</textarea>
+                    </div>
+
+                    <div class="agent-section">
+                        <label>📤 Đầu Ra (Output)</label>
+                        <textarea 
+                            onchange="updateAgent(${agent.id}, 'output', this.value)"
+                        >${agent.output || ''}</textarea>
+                    </div>
+
+                    <div class="agent-section">
+                        <label>🎯 Trạng Thái</label>
+                        <select 
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"
+                            onchange="updateAgent(${agent.id}, 'status', this.value)"
+                        >
+                            <option value="pending" ${agent.status === 'pending' ? 'selected' : ''}>Chưa Làm</option>
+                            <option value="active" ${agent.status === 'active' ? 'selected' : ''}>Đang Làm</option>
+                            <option value="completed" ${agent.status === 'completed' ? 'selected' : ''}>Hoàn Thành</option>
+                        </select>
+                        <span class="status-badge status-${agent.status}">
+                            ${agent.status === 'pending' ? '⏳ Chưa Làm' : agent.status === 'active' ? '⏸️ Đang Làm' : '✅ Hoàn Thành'}
+                        </span>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-delete" onclick="deleteAgent(${agent.id})">🗑️ Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update workflow visualization
+        function updateWorkflow(agents) {
+            const container = document.getElementById('workflowContainer');
+            const steps = agents.map((agent, index) => `
+                <div class="workflow-step ${agent.status === 'completed' ? 'completed' : agent.status === 'active' ? 'active' : ''}">
+                    <div class="step-icon">${agent.icon}</div>
+                    <div class="step-name">${agent.name}</div>
+                    <div class="step-status">${agent.order}</div>
+                </div>
+                ${index < agents.length - 1 ? '<div class="arrow">→</div>' : ''}
+            `).join('');
+            container.innerHTML = steps;
+        }
+
+        // Update statistics
+        function updateStats(agents) {
+            document.getElementById('totalAgents').textContent = agents.length;
+            document.getElementById('completedCount').textContent = agents.filter(a => a.status === 'completed').length;
+            document.getElementById('activeCount').textContent = agents.filter(a => a.status === 'active').length;
+            document.getElementById('pendingCount').textContent = agents.filter(a => a.status === 'pending').length;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load sample data if empty
+            if (loadAgents().length === 0) {
+                const sampleAgents = [
+                    {
+                        id: 1,
+                        order: 1,
+                        name: 'Thu thập yêu cầu',
+                        description: 'Agent này nhận và xử lý các yêu cầu từ người dùng',
+                        input: 'Yêu cầu từ người dùng (text, file)',
+                        process: 'Phân tích và chuẩn hóa yêu cầu',
+                        output: 'Yêu cầu đã được chuẩn hóa',
+                        status: 'completed',
+                        icon: '📥'
+                    },
+                    {
+                        id: 2,
+                        order: 2,
+                        name: 'Phân tích',
+                        description: 'Agent phân tích chi tiết yêu cầu và tạo kế hoạch',
+                        input: 'Yêu cầu đã chuẩn hóa',
+                        process: 'Phân tích cấu trúc, tìm kiếm tài liệu liên quan',
+                        output: 'Báo cáo phân tích chi tiết',
+                        status: 'active',
+                        icon: '🔍'
+                    },
+                    {
+                        id: 3,
+                        order: 3,
+                        name: 'Thực hiện',
+                        description: 'Agent thực hiện công việc dựa trên kế hoạch',
+                        input: 'Kế hoạch chi tiết',
+                        process: 'Thực hiện các bước công việc',
+                        output: 'Kết quả thực hiện',
+                        status: 'pending',
+                        icon: '⚙️'
+                    },
+                    {
+                        id: 4,
+                        order: 4,
+                        name: 'Kiểm tra',
+                        description: 'Agent kiểm tra chất lượng kết quả',
+                        input: 'Kết quả thực hiện',
+                        process: 'Kiểm tra từng tiêu chí chất lượng',
+                        output: 'Báo cáo kiểm tra + Phê duyệt',
+                        status: 'pending',
+                        icon: '✅'
+                    }
+                ];
+                localStorage.setItem('agents', JSON.stringify(sampleAgents));
+            }
+            updateUI();
+        });
+    </script>
+</body>
+</html>
